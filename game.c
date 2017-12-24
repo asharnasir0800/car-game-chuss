@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
  
@@ -48,11 +50,12 @@ int main(int argc, char **argv)
 
    HURDLE hurdles[HURDLE_ARRAY_SIZE];
 
+   srand(time(NULL));
    float universal_dy = 4.0;
    float bouncer_x = SCREEN_W / 2.0 - BOUNCER_W / 2.0;
    float bouncer_y = SCREEN_H / 2.0 - BOUNCER_H / 2.0;
 
-   float hurdle_x = 200;
+   float hurdle_x = WALL_EDGE_DISTANCE + WALL_THICKNESS ;
    float hurdle_y = 0;
 
    bool key[4] = { false, false, false, false };
@@ -101,11 +104,14 @@ int main(int argc, char **argv)
    al_set_target_bitmap(bouncer);
    al_clear_to_color(al_map_rgb(255, 0, 255));
  
+   const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - BOUNCER_W * 3;
    for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
       hurdle_bmp = al_create_bitmap(BOUNCER_W * 3, BOUNCER_H);
       al_set_target_bitmap(hurdle_bmp);
       al_clear_to_color(al_map_rgb(255, 0, 0));
-      HURDLE a_hurdle = { hurdle_x ,hurdle_y + 2 * i * BOUNCER_H, BOUNCER_W * 3 +  2 * i * BOUNCER_H, BOUNCER_H,hurdle_bmp } ;
+      int new_offset = rand() % ROAD_WIDTH ;
+      printf("%d\n", new_offset);
+      HURDLE a_hurdle = { hurdle_x + new_offset ,hurdle_y + 5 * i * BOUNCER_H, BOUNCER_W * 3, BOUNCER_H,hurdle_bmp } ;
       hurdles[i] = a_hurdle;
    }
  
@@ -159,9 +165,19 @@ int main(int argc, char **argv)
          for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
 
             HURDLE a_hurdle = hurdles[i];
-            
-            doexit = check_for_hurdle_collisions(&a_hurdle,bouncer_x,bouncer_y);
-            printf("%d\n",doexit );
+            // printf("%d,%d\n", bouncer_x,bouncer_y);
+            bool cond1 = bouncer_x < a_hurdle.x + a_hurdle.w;
+            bool cond2 = bouncer_x + BOUNCER_W > a_hurdle.x;
+            bool cond3 = bouncer_y < a_hurdle.y + a_hurdle.h;
+            bool cond4 = bouncer_y + BOUNCER_H > a_hurdle.y;
+
+            if (cond1 && cond2 && cond3 && cond4 ) {
+               // printf("%d-%d-%d-%d\n", cond1,cond2,cond3,cond4);
+               // printf("%d,%d\n", a_hurdle.x,a_hurdle.y);
+               doexit = true;
+            }
+
+            // printf("%d\n",doexit );
             hurdles[i].y += universal_dy;
          }
          redraw = true;
