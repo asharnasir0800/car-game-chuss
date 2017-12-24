@@ -1,15 +1,34 @@
 #include <stdio.h>
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
  
+#define HURDLE_ARRAY_SIZE 10
+
 const float FPS = 60;
 const int SCREEN_W = 800;
 const int SCREEN_H = 600;
-const int BOUNCER_SIZE = 32;
+const int BOUNCER_W = 32;
+const int BOUNCER_H = 48;
 const float WALL_EDGE_DISTANCE = 100;
 const float WALL_THICKNESS = 25;
+
 enum MYKEYS {
    KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT
 };
+
+typedef struct {
+   int x;
+   int y;
+   int w;
+   int h;
+   ALLEGRO_BITMAP *bmp;
+} HURDLE;
+
+
+void draw_walls(){
+   al_draw_filled_rectangle(WALL_EDGE_DISTANCE , 0.0 , WALL_EDGE_DISTANCE+WALL_THICKNESS, SCREEN_H, al_map_rgb(255,255,255));
+   al_draw_filled_rectangle(SCREEN_W - WALL_EDGE_DISTANCE , 0.0 , SCREEN_W - (WALL_EDGE_DISTANCE+WALL_THICKNESS), SCREEN_H, al_map_rgb(255,255,255));
+}
 
 int main(int argc, char **argv)
 {
@@ -17,8 +36,17 @@ int main(int argc, char **argv)
    ALLEGRO_EVENT_QUEUE *event_queue = NULL;
    ALLEGRO_TIMER *timer = NULL;
    ALLEGRO_BITMAP *bouncer = NULL;
-   float bouncer_x = SCREEN_W / 2.0 - BOUNCER_SIZE / 2.0;
-   float bouncer_y = SCREEN_H / 2.0 - BOUNCER_SIZE / 2.0;
+   ALLEGRO_BITMAP *hurdle_bmp = NULL;
+
+   HURDLE hurdles[HURDLE_ARRAY_SIZE];
+
+   float universal_dy = 4.0;
+   float bouncer_x = SCREEN_W / 2.0 - BOUNCER_W / 2.0;
+   float bouncer_y = SCREEN_H / 2.0 - BOUNCER_H / 2.0;
+
+   float hurdle_x = 200;
+   float hurdle_y = 0;
+
    bool key[4] = { false, false, false, false };
    bool redraw = true;
    bool doexit = false;
@@ -46,7 +74,14 @@ int main(int argc, char **argv)
       return -1;
    }
  
-   bouncer = al_create_bitmap(BOUNCER_SIZE, BOUNCER_SIZE);
+   bouncer = al_create_bitmap(BOUNCER_W, BOUNCER_H);
+   if(!bouncer) {
+      fprintf(stderr, "failed to create bouncer bitmap!\n");
+      al_destroy_display(display);
+      al_destroy_timer(timer);
+      return -1;
+   }
+
    if(!bouncer) {
       fprintf(stderr, "failed to create bouncer bitmap!\n");
       al_destroy_display(display);
@@ -56,8 +91,15 @@ int main(int argc, char **argv)
 
  
    al_set_target_bitmap(bouncer);
- 
    al_clear_to_color(al_map_rgb(255, 0, 255));
+ 
+   for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
+      hurdle_bmp = al_create_bitmap(BOUNCER_W * 3, BOUNCER_H);
+      al_set_target_bitmap(hurdle_bmp);
+      al_clear_to_color(al_map_rgb(255, 0, 0));
+      HURDLE a_hurdle = { hurdle_x ,hurdle_y + 2 * i * BOUNCER_H, BOUNCER_W * 3 +  2 * i * BOUNCER_H, BOUNCER_H,hurdle_bmp } ;
+      hurdles[i] = a_hurdle;
+   }
  
    al_set_target_bitmap(al_get_backbuffer(display));
 
@@ -79,7 +121,6 @@ int main(int argc, char **argv)
 
    al_register_event_source(event_queue, al_get_keyboard_event_source());
 
-   al_draw_filled_rectangle(0.0 , 0.0 , 25, 500.0, al_map_rgb(14,255,255));
    al_clear_to_color(al_map_rgb(0,0,0));
    al_flip_display();
  
@@ -95,18 +136,28 @@ int main(int argc, char **argv)
             bouncer_y -= 4.0;
          }
 
-         if(key[KEY_DOWN] && bouncer_y <= SCREEN_H - BOUNCER_SIZE - 4.0) {
+         if(key[KEY_DOWN] && bouncer_y <= SCREEN_H - BOUNCER_H - 4.0) {
             bouncer_y += 4.0;
          }
 
-         if(key[KEY_LEFT] && bouncer_x >= 4.0) {
+         if(key[KEY_LEFT] && bouncer_x - ( WALL_EDGE_DISTANCE + WALL_THICKNESS ) >= 4.0) {
             bouncer_x -= 4.0;
          }
 
-         if(key[KEY_RIGHT] && bouncer_x <= SCREEN_W - BOUNCER_SIZE - 4.0) {
+         if(key[KEY_RIGHT] && bouncer_x + ( WALL_EDGE_DISTANCE + WALL_THICKNESS ) <= SCREEN_W - BOUNCER_W - 4.0) {
             bouncer_x += 4.0;
          }
 
+         for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
+
+            HURDLE a_hurdle = hurdles[i];
+
+            if (bouncer_x < a_hurdle.x + BOUNCER_W * 3 && bouncer_x + BOUNCER_W > a_hurdle.w && bouncer_y + BOUNCER_H > a_hurdle.h && bouncer_y < a_hurdle.y + BOUNCER_H){
+               doexit = true;
+            }
+
+            hurdles[i].y += universal_dy;
+         }
          redraw = true;
       }
       else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
@@ -160,8 +211,12 @@ int main(int argc, char **argv)
  
 
          al_clear_to_color(al_map_rgb(0,0,0));
-         al_draw_filled_rectangle(0.0 , 0.0 , 25.5, 500.0, al_map_rgb(14,255,255));
+         draw_walls();
          al_draw_bitmap(bouncer, bouncer_x, bouncer_y, 0);
+         for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
+            HURDLE a_hurdle = hurdles[i];
+            al_draw_bitmap(a_hurdle.bmp, a_hurdle.x, a_hurdle.y, 0);
+         }
          al_flip_display();
  
       }
