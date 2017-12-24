@@ -3,17 +3,22 @@
 #include <time.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
  
-#define HURDLE_ARRAY_SIZE 10
+#define HURDLE_ARRAY_SIZE 5
 
 const float FPS = 60;
 const int SCREEN_W = 800;
 const int SCREEN_H = 600;
 const int BOUNCER_W = 32;
 const int BOUNCER_H = 48;
+const int HURDLE_W = 128;
+const int HURDLE_H = 48;
 const float WALL_EDGE_DISTANCE = 100;
 const float WALL_THICKNESS = 25;
 
+float universal_y = 0;
 enum MYKEYS {
    KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT
 };
@@ -42,12 +47,12 @@ HURDLE create_random_hurdle(){
    float hurdle_y = 0;
 
    int static i = 0;
-   ALLEGRO_BITMAP *hurdle_bmp = al_create_bitmap(BOUNCER_W * 3, BOUNCER_H);
+   ALLEGRO_BITMAP *hurdle_bmp = al_create_bitmap(HURDLE_W, BOUNCER_H);
    al_set_target_bitmap(hurdle_bmp);
    al_clear_to_color(al_map_rgb(255, 0, 0));
    int new_offset = rand() % ROAD_WIDTH ;
    printf("%d\n", new_offset);
-   HURDLE a_hurdle = { hurdle_x + new_offset ,hurdle_y + 5 * i * BOUNCER_H, BOUNCER_W * 3, BOUNCER_H,hurdle_bmp } ;
+   HURDLE a_hurdle = { hurdle_x + new_offset ,0 - BOUNCER_H , HURDLE_W, BOUNCER_H,hurdle_bmp } ;
 
    i = (i + 1) % HURDLE_ARRAY_SIZE;
    hurdles[i] = a_hurdle;
@@ -70,6 +75,7 @@ int main(int argc, char **argv)
    ALLEGRO_BITMAP *bouncer = NULL;
    ALLEGRO_BITMAP *hurdle_bmp = NULL;
 
+   char score[6];
 
    srand(time(NULL));
    float universal_dy = 4.0;
@@ -120,7 +126,7 @@ int main(int argc, char **argv)
 
  
    al_set_target_bitmap(bouncer);
-   al_clear_to_color(al_map_rgb(255, 0, 255));
+   al_clear_to_color(al_map_rgb(255, 255, 0));
  
    for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
       hurdle_bmp = al_create_bitmap(BOUNCER_W * 3, BOUNCER_H);
@@ -128,7 +134,8 @@ int main(int argc, char **argv)
       al_clear_to_color(al_map_rgb(255, 0, 0));
       int new_offset = rand() % ROAD_WIDTH ;
       printf("%d\n", new_offset);
-      HURDLE a_hurdle = { hurdle_x + new_offset ,hurdle_y + 5 * i * BOUNCER_H, BOUNCER_W * 3, BOUNCER_H,hurdle_bmp } ;
+      HURDLE a_hurdle = { hurdle_x + new_offset ,hurdle_y + (2 * i * BOUNCER_H), BOUNCER_W * 3, BOUNCER_H,hurdle_bmp } ;
+      printf("Got here\n");
       hurdles[i] = a_hurdle;
    }
  
@@ -145,6 +152,9 @@ int main(int argc, char **argv)
    }
    
    al_init_primitives_addon();
+   al_init_font_addon(); 
+   al_init_ttf_addon();
+   ALLEGRO_FONT *font = al_load_ttf_font("arial.ttf",14,0);
  
    al_register_event_source(event_queue, al_get_display_event_source(display));
  
@@ -156,7 +166,8 @@ int main(int argc, char **argv)
    al_flip_display();
  
    al_start_timer(timer);
- 
+   
+   int last_hurdle_pos = 0; 
    while(!doexit)
    {
       ALLEGRO_EVENT ev;
@@ -164,19 +175,19 @@ int main(int argc, char **argv)
  
       if(ev.type == ALLEGRO_EVENT_TIMER) {
          if(key[KEY_UP] && bouncer_y >= 4.0) {
-            bouncer_y -= 4.0;
+            bouncer_y -= 10.0;
          }
 
          if(key[KEY_DOWN] && bouncer_y <= SCREEN_H - BOUNCER_H - 4.0) {
-            bouncer_y += 4.0;
+            bouncer_y += 10.0;
          }
 
          if(key[KEY_LEFT] && bouncer_x - ( WALL_EDGE_DISTANCE + WALL_THICKNESS ) >= 4.0) {
-            bouncer_x -= 4.0;
+            bouncer_x -= 20.9;
          }
 
          if(key[KEY_RIGHT] && bouncer_x + ( WALL_EDGE_DISTANCE + WALL_THICKNESS ) <= SCREEN_W - BOUNCER_W - 4.0) {
-            bouncer_x += 4.0;
+            bouncer_x += 20.0;
          }
 
          for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
@@ -196,10 +207,13 @@ int main(int argc, char **argv)
 
             // printf("%d\n",doexit );
             hurdles[i].y += universal_dy;
-            if (hurdles[i].y > SCREEN_H){
-               create_random_hurdle()
+            if (hurdles[i].y > SCREEN_H && ((int) (universal_y - last_hurdle_pos) % SCREEN_H) > BOUNCER_H * 3 ){
+               create_random_hurdle();
+               last_hurdle_pos = universal_y;
+               al_set_target_bitmap(al_get_backbuffer(display));
             }
          }
+         universal_y += universal_dy;
          redraw = true;
       }
       else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
@@ -259,6 +273,8 @@ int main(int argc, char **argv)
             HURDLE a_hurdle = hurdles[i];
             al_draw_bitmap(a_hurdle.bmp, a_hurdle.x, a_hurdle.y, 0);
          }
+         sprintf(score,"%d",(int) (universal_y / BOUNCER_H ) );
+         al_draw_text(font,al_map_rgb(255,255,255), 0, 300, 0, score);
          al_flip_display();
  
       }
