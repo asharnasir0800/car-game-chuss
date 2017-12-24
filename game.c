@@ -24,6 +24,12 @@ typedef struct {
    ALLEGRO_BITMAP *bmp;
 } HURDLE;
 
+bool check_for_hurdle_collisions(HURDLE a_hurdle,int bouncer_x,int bouncer_y){
+   if (bouncer_x < a_hurdle.x + BOUNCER_W * 3 && bouncer_x + BOUNCER_W > a_hurdle.w && bouncer_y + BOUNCER_H > a_hurdle.h && bouncer_y < a_hurdle.y + BOUNCER_H){
+      return true;
+   }
+   return false;
+}
 
 void draw_walls(){
    al_draw_filled_rectangle(WALL_EDGE_DISTANCE , 0.0 , WALL_EDGE_DISTANCE+WALL_THICKNESS, SCREEN_H, al_map_rgb(255,255,255));
@@ -151,10 +157,8 @@ int main(int argc, char **argv)
          for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
 
             HURDLE a_hurdle = hurdles[i];
-
-            if (bouncer_x < a_hurdle.x + BOUNCER_W * 3 && bouncer_x + BOUNCER_W > a_hurdle.w && bouncer_y + BOUNCER_H > a_hurdle.h && bouncer_y < a_hurdle.y + BOUNCER_H){
-               doexit = true;
-            }
+            
+            doexit = check_for_hurdle_collisions(a_hurdle,bouncer_x,bouncer_y);
 
             hurdles[i].y += universal_dy;
          }
