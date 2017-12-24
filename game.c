@@ -34,6 +34,7 @@ bool check_for_hurdle_collisions(HURDLE *hurdle_ptr,int bouncer_x,int bouncer_y)
    }
    return false;
 }
+HURDLE hurdles[HURDLE_ARRAY_SIZE];
 
 HURDLE create_random_hurdle(){
    const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - BOUNCER_W * 3;
@@ -49,7 +50,7 @@ HURDLE create_random_hurdle(){
    HURDLE a_hurdle = { hurdle_x + new_offset ,hurdle_y + 5 * i * BOUNCER_H, BOUNCER_W * 3, BOUNCER_H,hurdle_bmp } ;
 
    i = (i + 1) % HURDLE_ARRAY_SIZE;
-
+   hurdles[i] = a_hurdle;
    return a_hurdle;
 }
 
@@ -69,7 +70,6 @@ int main(int argc, char **argv)
    ALLEGRO_BITMAP *bouncer = NULL;
    ALLEGRO_BITMAP *hurdle_bmp = NULL;
 
-   HURDLE hurdles[HURDLE_ARRAY_SIZE];
 
    srand(time(NULL));
    float universal_dy = 4.0;
@@ -197,7 +197,7 @@ int main(int argc, char **argv)
             // printf("%d\n",doexit );
             hurdles[i].y += universal_dy;
             if (hurdles[i].y > SCREEN_H){
-
+               create_random_hurdle()
             }
          }
          redraw = true;
