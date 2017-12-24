@@ -24,7 +24,9 @@ typedef struct {
    ALLEGRO_BITMAP *bmp;
 } HURDLE;
 
-bool check_for_hurdle_collisions(HURDLE a_hurdle,int bouncer_x,int bouncer_y){
+bool check_for_hurdle_collisions(HURDLE *hurdle_ptr,int bouncer_x,int bouncer_y){
+   HURDLE a_hurdle = *hurdle_ptr;
+   printf("%d,%d\n", bouncer_x,bouncer_y);
    if (bouncer_x < a_hurdle.x + BOUNCER_W * 3 && bouncer_x + BOUNCER_W > a_hurdle.w && bouncer_y + BOUNCER_H > a_hurdle.h && bouncer_y < a_hurdle.y + BOUNCER_H){
       return true;
    }
@@ -158,8 +160,8 @@ int main(int argc, char **argv)
 
             HURDLE a_hurdle = hurdles[i];
             
-            doexit = check_for_hurdle_collisions(a_hurdle,bouncer_x,bouncer_y);
-
+            doexit = check_for_hurdle_collisions(&a_hurdle,bouncer_x,bouncer_y);
+            printf("%d\n",doexit );
             hurdles[i].y += universal_dy;
          }
          redraw = true;
