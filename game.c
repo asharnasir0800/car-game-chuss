@@ -35,6 +35,24 @@ bool check_for_hurdle_collisions(HURDLE *hurdle_ptr,int bouncer_x,int bouncer_y)
    return false;
 }
 
+HURDLE create_random_hurdle(){
+   const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - BOUNCER_W * 3;
+   float hurdle_x = WALL_EDGE_DISTANCE + WALL_THICKNESS ;
+   float hurdle_y = 0;
+
+   int static i = 0;
+   ALLEGRO_BITMAP *hurdle_bmp = al_create_bitmap(BOUNCER_W * 3, BOUNCER_H);
+   al_set_target_bitmap(hurdle_bmp);
+   al_clear_to_color(al_map_rgb(255, 0, 0));
+   int new_offset = rand() % ROAD_WIDTH ;
+   printf("%d\n", new_offset);
+   HURDLE a_hurdle = { hurdle_x + new_offset ,hurdle_y + 5 * i * BOUNCER_H, BOUNCER_W * 3, BOUNCER_H,hurdle_bmp } ;
+
+   i = (i + 1) % HURDLE_ARRAY_SIZE;
+
+   return a_hurdle;
+}
+
 void draw_walls(){
    al_draw_filled_rectangle(WALL_EDGE_DISTANCE , 0.0 , WALL_EDGE_DISTANCE+WALL_THICKNESS, SCREEN_H, al_map_rgb(255,255,255));
    al_draw_filled_rectangle(SCREEN_W - WALL_EDGE_DISTANCE , 0.0 , SCREEN_W - (WALL_EDGE_DISTANCE+WALL_THICKNESS), SCREEN_H, al_map_rgb(255,255,255));
@@ -42,6 +60,9 @@ void draw_walls(){
 
 int main(int argc, char **argv)
 {
+   const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - BOUNCER_W * 3;
+   float hurdle_x = WALL_EDGE_DISTANCE + WALL_THICKNESS ;
+   float hurdle_y = 0;
    ALLEGRO_DISPLAY *display = NULL;
    ALLEGRO_EVENT_QUEUE *event_queue = NULL;
    ALLEGRO_TIMER *timer = NULL;
@@ -54,9 +75,6 @@ int main(int argc, char **argv)
    float universal_dy = 4.0;
    float bouncer_x = SCREEN_W / 2.0 - BOUNCER_W / 2.0;
    float bouncer_y = SCREEN_H / 2.0 - BOUNCER_H / 2.0;
-
-   float hurdle_x = WALL_EDGE_DISTANCE + WALL_THICKNESS ;
-   float hurdle_y = 0;
 
    bool key[4] = { false, false, false, false };
    bool redraw = true;
@@ -104,7 +122,6 @@ int main(int argc, char **argv)
    al_set_target_bitmap(bouncer);
    al_clear_to_color(al_map_rgb(255, 0, 255));
  
-   const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - BOUNCER_W * 3;
    for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
       hurdle_bmp = al_create_bitmap(BOUNCER_W * 3, BOUNCER_H);
       al_set_target_bitmap(hurdle_bmp);
@@ -179,6 +196,9 @@ int main(int argc, char **argv)
 
             // printf("%d\n",doexit );
             hurdles[i].y += universal_dy;
+            if (hurdles[i].y > SCREEN_H){
+
+            }
          }
          redraw = true;
       }
