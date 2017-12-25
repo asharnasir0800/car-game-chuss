@@ -5,17 +5,18 @@
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
+#include "allegro5/allegro_image.h"
  
 #define HURDLE_ARRAY_SIZE 5
 
 const float FPS = 60;
-const int SCREEN_W = 800;
+const int SCREEN_W = 1200;
 const int SCREEN_H = 600;
-const int BOUNCER_W = 32;
-const int BOUNCER_H = 48;
+const int BOUNCER_W = 64;
+const int BOUNCER_H = 96;
 const int HURDLE_W = 128;
 const int HURDLE_H = 48;
-const float WALL_EDGE_DISTANCE = 100;
+const float WALL_EDGE_DISTANCE = 200;
 const float WALL_THICKNESS = 25;
 
 float universal_y = 0;
@@ -30,6 +31,43 @@ typedef struct {
    int h;
    ALLEGRO_BITMAP *bmp;
 } HURDLE;
+
+ALLEGRO_BITMAP *load_bitmap_at_size(const char *filename, int w, int h)
+{
+  ALLEGRO_BITMAP *resized_bmp, *loaded_bmp, *prev_target;
+
+  // 1. create a temporary bitmap of size we want
+  resized_bmp = al_create_bitmap(w, h);
+  if (!resized_bmp) return NULL;
+
+  // 2. load the bitmap at the original size
+  loaded_bmp = al_load_bitmap(filename);
+  if (!loaded_bmp)
+  {
+     al_destroy_bitmap(resized_bmp);
+     return NULL;
+  }
+
+  // 3. set the target bitmap to the resized bmp
+  prev_target = al_get_target_bitmap();
+  al_set_target_bitmap(resized_bmp);
+
+  // 4. copy the loaded bitmap to the resized bmp
+  al_draw_scaled_bitmap(loaded_bmp,
+     0, 0,                                // source origin
+     al_get_bitmap_width(loaded_bmp),     // source width
+     al_get_bitmap_height(loaded_bmp),    // source height
+     0, 0,                                // target origin
+     w, h,                                // target dimensions
+     0                                    // flags
+  );
+
+  // 5. restore the previous target and clean up
+  al_set_target_bitmap(prev_target);
+  // al_destroy_loaded_bmp(loaded_bmp);
+
+  return resized_bmp;      
+}
 
 bool check_for_hurdle_collisions(HURDLE *hurdle_ptr,int bouncer_x,int bouncer_y){
    HURDLE a_hurdle = *hurdle_ptr;
@@ -78,7 +116,7 @@ int main(int argc, char **argv)
    char score[6];
 
    srand(time(NULL));
-   float universal_dy = 4.0;
+   float universal_dy = 6.0;
    float bouncer_x = SCREEN_W / 2.0 - BOUNCER_W / 2.0;
    float bouncer_y = SCREEN_H / 2.0 - BOUNCER_H / 2.0;
 
@@ -91,6 +129,7 @@ int main(int argc, char **argv)
       return -1;
    }
  
+   al_init_image_addon();
    if(!al_install_keyboard()) {
       fprintf(stderr, "failed to initialize the keyboard!\n");
       return -1;
@@ -109,7 +148,7 @@ int main(int argc, char **argv)
       return -1;
    }
  
-   bouncer = al_create_bitmap(BOUNCER_W, BOUNCER_H);
+   bouncer = load_bitmap_at_size("car.png", BOUNCER_W, BOUNCER_H);
    if(!bouncer) {
       fprintf(stderr, "failed to create bouncer bitmap!\n");
       al_destroy_display(display);
@@ -125,18 +164,11 @@ int main(int argc, char **argv)
    }
 
  
-   al_set_target_bitmap(bouncer);
-   al_clear_to_color(al_map_rgb(255, 255, 0));
+   // al_set_target_bitmap(bouncer);
+   // al_clear_to_color(al_map_rgb(255, 255, 0));
  
    for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
-      hurdle_bmp = al_create_bitmap(BOUNCER_W * 3, BOUNCER_H);
-      al_set_target_bitmap(hurdle_bmp);
-      al_clear_to_color(al_map_rgb(255, 0, 0));
-      int new_offset = rand() % ROAD_WIDTH ;
-      printf("%d\n", new_offset);
-      HURDLE a_hurdle = { hurdle_x + new_offset ,hurdle_y + (2 * i * BOUNCER_H), BOUNCER_W * 3, BOUNCER_H,hurdle_bmp } ;
-      printf("Got here\n");
-      hurdles[i] = a_hurdle;
+      create_random_hurdle();
    }
  
    al_set_target_bitmap(al_get_backbuffer(display));
@@ -175,19 +207,19 @@ int main(int argc, char **argv)
  
       if(ev.type == ALLEGRO_EVENT_TIMER) {
          if(key[KEY_UP] && bouncer_y >= 4.0) {
-            bouncer_y -= 10.0;
+            bouncer_y -= 8.0;
          }
 
          if(key[KEY_DOWN] && bouncer_y <= SCREEN_H - BOUNCER_H - 4.0) {
-            bouncer_y += 10.0;
+            bouncer_y += 8.0;
          }
 
          if(key[KEY_LEFT] && bouncer_x - ( WALL_EDGE_DISTANCE + WALL_THICKNESS ) >= 4.0) {
-            bouncer_x -= 20.9;
+            bouncer_x -= 8;
          }
 
          if(key[KEY_RIGHT] && bouncer_x + ( WALL_EDGE_DISTANCE + WALL_THICKNESS ) <= SCREEN_W - BOUNCER_W - 4.0) {
-            bouncer_x += 20.0;
+            bouncer_x += 8;
          }
 
          for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
@@ -275,8 +307,7 @@ int main(int argc, char **argv)
          }
          sprintf(score,"%d",(int) (universal_y / BOUNCER_H ) );
          al_draw_text(font,al_map_rgb(255,255,255), 0, 300, 0, score);
-         al_flip_display();
- 
+         al_flip_display(); 
       }
    }
 
