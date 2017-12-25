@@ -80,7 +80,7 @@ bool check_for_hurdle_collisions(HURDLE *hurdle_ptr,int bouncer_x,int bouncer_y)
 HURDLE hurdles[HURDLE_ARRAY_SIZE];
 
 HURDLE create_random_hurdle(){
-   const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - BOUNCER_W * 3;
+   const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - HURDLE_W;
    float hurdle_x = WALL_EDGE_DISTANCE + WALL_THICKNESS ;
    float hurdle_y = 0;
 
