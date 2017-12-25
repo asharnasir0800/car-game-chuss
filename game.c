@@ -148,7 +148,7 @@ int main(int argc, char **argv)
       return -1;
    }
  
-   bouncer = load_bitmap_at_size("car.png", BOUNCER_W, BOUNCER_H);
+   bouncer = load_bitmap_at_size("images/car.png", BOUNCER_W, BOUNCER_H);
    if(!bouncer) {
       fprintf(stderr, "failed to create bouncer bitmap!\n");
       al_destroy_display(display);
