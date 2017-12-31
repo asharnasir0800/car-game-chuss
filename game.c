@@ -92,8 +92,8 @@ HURDLE create_random_hurdle(){
    printf("%d\n", new_offset);
    HURDLE a_hurdle = { hurdle_x + new_offset ,0 - BOUNCER_H , HURDLE_W, BOUNCER_H,hurdle_bmp } ;
 
-   i = (i + 1) % HURDLE_ARRAY_SIZE;
    hurdles[i] = a_hurdle;
+   i = (i + 1) % HURDLE_ARRAY_SIZE;
    return a_hurdle;
 }
 
@@ -240,6 +240,7 @@ int main(int argc, char **argv)
             // printf("%d\n",doexit );
             hurdles[i].y += universal_dy;
             if (hurdles[i].y > SCREEN_H && ((int) (universal_y - last_hurdle_pos) % SCREEN_H) > BOUNCER_H * 3 ){
+            // if (hurdles[i].y > SCREEN_H  ){
                create_random_hurdle();
                last_hurdle_pos = universal_y;
                al_set_target_bitmap(al_get_backbuffer(display));
