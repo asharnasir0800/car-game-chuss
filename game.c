@@ -238,14 +238,7 @@ int main(int argc, char **argv)
 
             HURDLE a_hurdle = hurdles[i];
 
-
-            // printf("%d,%d\n", bouncer_x,bouncer_y);
-            bool cond1 = bouncer_x < a_hurdle.x + a_hurdle.w;
-            bool cond2 = bouncer_x + BOUNCER_W > a_hurdle.x;
-            bool cond3 = bouncer_y < a_hurdle.y + a_hurdle.h;
-            bool cond4 = bouncer_y + BOUNCER_H > a_hurdle.y;
-
-            if (cond1 && cond2 && cond3 && cond4 ) {
+            if (check_collision(bouncer_x,bouncer_y,BOUNCER_W,BOUNCER_H,a_hurdle.x,a_hurdle.y,a_hurdle.w,a_hurdle.h) ) {
                // printf("%d-%d-%d-%d\n", cond1,cond2,cond3,cond4);
                // printf("%d,%d\n", a_hurdle.x,a_hurdle.y);
                doexit = true;
