@@ -69,6 +69,15 @@ ALLEGRO_BITMAP *load_bitmap_at_size(const char *filename, int w, int h)
   return resized_bmp;      
 }
 
+bool check_collision(int x1,int y1, int w1, int h1, int x2, int y2, int w2 , int h2){
+   bool cond1 = x1 < x2 + w2;
+   bool cond2 = x1 + w1 > x2;
+   bool cond3 = y1 < y2 + h2;
+   bool cond4 = y1 + h1 > y2;
+   return cond1 && cond2 && cond3 && cond4;
+
+}
+
 bool check_for_hurdle_collisions(HURDLE *hurdle_ptr,int bouncer_x,int bouncer_y){
    HURDLE a_hurdle = *hurdle_ptr;
    printf("%d,%d\n", bouncer_x,bouncer_y);
@@ -85,9 +94,11 @@ HURDLE create_random_hurdle(int distance_since_last_hurdle){
    float hurdle_y = 0;
 
    int static i = 0;
+
    ALLEGRO_BITMAP *hurdle_bmp = al_create_bitmap(HURDLE_W, BOUNCER_H);
    al_set_target_bitmap(hurdle_bmp);
    al_clear_to_color(al_map_rgb(255, 0, 0));
+
    int new_offset = rand() % ROAD_WIDTH ;
    printf("%d\n", distance_since_last_hurdle  );
    // printf("%d\n", 0 - (BOUNCER_H + distance_since_last_hurdle)  );
