@@ -79,7 +79,7 @@ bool check_for_hurdle_collisions(HURDLE *hurdle_ptr,int bouncer_x,int bouncer_y)
 }
 HURDLE hurdles[HURDLE_ARRAY_SIZE];
 
-HURDLE create_random_hurdle(){
+HURDLE create_random_hurdle(int distance_since_last_hurdle){
    const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - HURDLE_W;
    float hurdle_x = WALL_EDGE_DISTANCE + WALL_THICKNESS ;
    float hurdle_y = 0;
@@ -89,8 +89,9 @@ HURDLE create_random_hurdle(){
    al_set_target_bitmap(hurdle_bmp);
    al_clear_to_color(al_map_rgb(255, 0, 0));
    int new_offset = rand() % ROAD_WIDTH ;
-   printf("%d\n", new_offset);
-   HURDLE a_hurdle = { hurdle_x + new_offset ,0 - BOUNCER_H , HURDLE_W, BOUNCER_H,hurdle_bmp } ;
+   printf("%d\n", distance_since_last_hurdle  );
+   // printf("%d\n", 0 - (BOUNCER_H + distance_since_last_hurdle)  );
+   HURDLE a_hurdle = { hurdle_x + new_offset ,0 - (BOUNCER_H + distance_since_last_hurdle) , HURDLE_W, BOUNCER_H,hurdle_bmp } ;
 
    hurdles[i] = a_hurdle;
    i = (i + 1) % HURDLE_ARRAY_SIZE;
@@ -168,7 +169,7 @@ int main(int argc, char **argv)
    // al_clear_to_color(al_map_rgb(255, 255, 0));
  
    for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
-      create_random_hurdle();
+      create_random_hurdle( 2 * i * BOUNCER_H);
    }
  
    al_set_target_bitmap(al_get_backbuffer(display));
@@ -225,6 +226,8 @@ int main(int argc, char **argv)
          for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
 
             HURDLE a_hurdle = hurdles[i];
+
+
             // printf("%d,%d\n", bouncer_x,bouncer_y);
             bool cond1 = bouncer_x < a_hurdle.x + a_hurdle.w;
             bool cond2 = bouncer_x + BOUNCER_W > a_hurdle.x;
@@ -240,8 +243,7 @@ int main(int argc, char **argv)
             // printf("%d\n",doexit );
             hurdles[i].y += universal_dy;
             if (hurdles[i].y > SCREEN_H && ((int) (universal_y - last_hurdle_pos) % SCREEN_H) > BOUNCER_H * 3 ){
-            // if (hurdles[i].y > SCREEN_H  ){
-               create_random_hurdle();
+               create_random_hurdle(universal_y - last_hurdle_pos );
                last_hurdle_pos = universal_y;
                al_set_target_bitmap(al_get_backbuffer(display));
             }
