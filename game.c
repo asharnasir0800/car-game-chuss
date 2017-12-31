@@ -111,7 +111,6 @@ HURDLE create_random_hurdle(int index_of_empty_hurdle){
    al_clear_to_color(al_map_rgb(255, 0, 0));
 
    int new_offset = rand() % ROAD_WIDTH ;
-   printf("%d\n", distance_since_last_hurdle  );
    // printf("%d\n", 0 - (BOUNCER_H + distance_since_last_hurdle)  );
    HURDLE a_hurdle = { hurdle_x + new_offset ,0 - (BOUNCER_H + distance_since_last_hurdle) , HURDLE_W, BOUNCER_H,hurdle_bmp } ;
 
