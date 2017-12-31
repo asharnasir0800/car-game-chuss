@@ -5,7 +5,7 @@
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
-#include "allegro5/allegro_image.h"
+#include <allegro5/allegro_image.h>
  
 #define HURDLE_ARRAY_SIZE 5
 #define ROAD_IMAGE "images/road.png"
