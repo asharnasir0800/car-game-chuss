@@ -74,13 +74,30 @@ bool check_collision(int x1,int y1, int w1, int h1, int x2, int y2, int w2 , int
    bool cond2 = x1 + w1 > x2;
    bool cond3 = y1 < y2 + h2;
    bool cond4 = y1 + h1 > y2;
-   return cond1 && cond2 && cond3 && cond4;
 
+   bool cond = cond1 && cond2 && cond3 && cond4;
+   return cond;
+}
+
+bool check_collision_hurdles(HURDLE *hurdle1 , HURDLE *hurdle2){
+   HURDLE a = *hurdle1;
+   HURDLE b = *hurdle2;
+   bool cond = check_collision(a.x - a.w*3 ,a.y - a.h *3 , a.w*3, a.h*3 , b.x - b.w * 3, b.y - b.h*3 , b.w*3 , b.h*3);
+   if(cond){
+      printf("collided\n" );
+   }
+   return cond;
 }
 
 HURDLE hurdles[HURDLE_ARRAY_SIZE];
 
-HURDLE create_random_hurdle(int distance_since_last_hurdle){
+bool check_collision_with_all_of_hurdles(HURDLE ahurdle){
+   bool collision = true;
+   for(int i = 0 ; i<HURDLE_ARRAY_SIZE;i++){
+      collision = collision && check_collision_hurdles(&ahurdle,&hurdles[i]);
+   }
+   return collision;
+}
    const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - HURDLE_W;
    float hurdle_x = WALL_EDGE_DISTANCE + WALL_THICKNESS ;
    float hurdle_y = 0;
