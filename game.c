@@ -98,9 +98,11 @@ bool check_collision_with_all_of_hurdles(HURDLE ahurdle){
    }
    return collision;
 }
+
+HURDLE create_random_hurdle(int index_of_empty_hurdle){
    const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - HURDLE_W;
    float hurdle_x = WALL_EDGE_DISTANCE + WALL_THICKNESS ;
-   float hurdle_y = 0;
+   float hurdle_y = 0 - BOUNCER_H;
 
    int static i = 0;
 
