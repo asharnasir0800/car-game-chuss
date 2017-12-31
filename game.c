@@ -99,23 +99,30 @@ bool check_collision_with_all_of_hurdles(HURDLE ahurdle){
    return collision;
 }
 
-HURDLE create_random_hurdle(int index_of_empty_hurdle){
+HURDLE create_random_hurdle(int index_of_empty_hurdle, int y_offset){
    const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - HURDLE_W;
    float hurdle_x = WALL_EDGE_DISTANCE + WALL_THICKNESS ;
-   float hurdle_y = 0 - BOUNCER_H;
+   // float hurdle_y = 0 - BOUNCER_H ;
+   float hurdle_y = 0 - BOUNCER_H - y_offset;
 
-   int static i = 0;
+   int static last_hurdle = -1;
+   
+   // if(last_hurdle != -1){
+   //    hurdle_y -= (hurdles[last_hurdle].y + HURDLE_H * 4);
+   // }
 
    ALLEGRO_BITMAP *hurdle_bmp = al_create_bitmap(HURDLE_W, BOUNCER_H);
    al_set_target_bitmap(hurdle_bmp);
-   al_clear_to_color(al_map_rgb(255, 0, 0));
+   al_clear_to_color(al_map_rgb(255, 0, 0)); 
 
    int new_offset = rand() % ROAD_WIDTH ;
    // printf("%d\n", 0 - (BOUNCER_H + distance_since_last_hurdle)  );
-   HURDLE a_hurdle = { hurdle_x + new_offset ,0 - (BOUNCER_H + distance_since_last_hurdle) , HURDLE_W, BOUNCER_H,hurdle_bmp } ;
-
-   hurdles[i] = a_hurdle;
-   i = (i + 1) % HURDLE_ARRAY_SIZE;
+   HURDLE a_hurdle = { hurdle_x + new_offset ,hurdle_y  , HURDLE_W, BOUNCER_H,hurdle_bmp } ;
+   // last_y_pos = hurdle_y;
+   // hurdles[i] = a_hurdle;
+   // i = (i + 1) % HURDLE_ARRAY_SIZE;
+   hurdles[index_of_empty_hurdle] = a_hurdle;
+   last_hurdle = index_of_empty_hurdle;
    return a_hurdle;
 }
 
@@ -134,11 +141,15 @@ int main(int argc, char **argv)
    ALLEGRO_TIMER *timer = NULL;
    ALLEGRO_BITMAP *bouncer = NULL;
    ALLEGRO_BITMAP *hurdle_bmp = NULL;
+   ALLEGRO_BITMAP *road_bmp1 = NULL;
+   ALLEGRO_BITMAP *road_bmp2 = NULL;
 
    char score[6];
 
    srand(time(NULL));
    float universal_dy = 6.0;
+   float universal_d2y = 0.01;
+   float dcar = 8;
    float bouncer_x = SCREEN_W / 2.0 - BOUNCER_W / 2.0;
    float bouncer_y = SCREEN_H / 2.0 - BOUNCER_H / 2.0;
 
@@ -169,8 +180,11 @@ int main(int argc, char **argv)
       al_destroy_timer(timer);
       return -1;
    }
+   int road_y = 0;
  
    bouncer = load_bitmap_at_size("images/car.png", BOUNCER_W, BOUNCER_H);
+   road_bmp1 = load_bitmap_at_size("images/road.png", SCREEN_W, SCREEN_H);
+   road_bmp2 = load_bitmap_at_size("images/road.png", SCREEN_W, SCREEN_H);
    if(!bouncer) {
       fprintf(stderr, "failed to create bouncer bitmap!\n");
       al_destroy_display(display);
@@ -190,7 +204,7 @@ int main(int argc, char **argv)
    // al_clear_to_color(al_map_rgb(255, 255, 0));
  
    for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
-      create_random_hurdle( 2 * i * BOUNCER_H);
+      create_random_hurdle( i, 10 * i  * HURDLE_H);
    }
  
    al_set_target_bitmap(al_get_backbuffer(display));
@@ -229,19 +243,19 @@ int main(int argc, char **argv)
  
       if(ev.type == ALLEGRO_EVENT_TIMER) {
          if(key[KEY_UP] && bouncer_y >= 4.0) {
-            bouncer_y -= 8.0;
+            bouncer_y -= dcar;
          }
 
          if(key[KEY_DOWN] && bouncer_y <= SCREEN_H - BOUNCER_H - 4.0) {
-            bouncer_y += 8.0;
+            bouncer_y += dcar;
          }
 
          if(key[KEY_LEFT] && bouncer_x - ( WALL_EDGE_DISTANCE + WALL_THICKNESS ) >= 4.0) {
-            bouncer_x -= 8;
+            bouncer_x -= dcar;
          }
 
          if(key[KEY_RIGHT] && bouncer_x + ( WALL_EDGE_DISTANCE + WALL_THICKNESS ) <= SCREEN_W - BOUNCER_W - 4.0) {
-            bouncer_x += 8;
+            bouncer_x += dcar;
          }
 
          for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
@@ -256,13 +270,17 @@ int main(int argc, char **argv)
 
             // printf("%d\n",doexit );
             hurdles[i].y += universal_dy;
-            if (hurdles[i].y > SCREEN_H && ((int) (universal_y - last_hurdle_pos) % SCREEN_H) > BOUNCER_H * 3 ){
-               create_random_hurdle(universal_y - last_hurdle_pos );
+            if (hurdles[i].y > SCREEN_H && ((int) (universal_y - last_hurdle_pos)) > 10 * HURDLE_H ){
+            // if (hurdles[i].y > SCREEN_H ){
+               create_random_hurdle(i ,(universal_y - last_hurdle_pos));
                last_hurdle_pos = universal_y;
                al_set_target_bitmap(al_get_backbuffer(display));
             }
          }
          universal_y += universal_dy;
+         road_y = ((int)(road_y + universal_dy)) % SCREEN_H;
+         universal_dy += universal_d2y;
+         dcar += universal_d2y/5;
          redraw = true;
       }
       else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
@@ -316,11 +334,15 @@ int main(int argc, char **argv)
  
 
          al_clear_to_color(al_map_rgb(0,0,0));
+         al_draw_bitmap(road_bmp1, 0, road_y-SCREEN_H,0);
+         al_draw_bitmap(road_bmp2, 0, road_y,0);
          draw_walls();
          al_draw_bitmap(bouncer, bouncer_x, bouncer_y, 0);
          for(int i = 0 ; i < HURDLE_ARRAY_SIZE; i++){
             HURDLE a_hurdle = hurdles[i];
-            al_draw_bitmap(a_hurdle.bmp, a_hurdle.x, a_hurdle.y, 0);
+            if(!(a_hurdle.y + a_hurdle.w > 0  && a_hurdle.y > SCREEN_H) || true){
+               al_draw_bitmap(a_hurdle.bmp, a_hurdle.x, a_hurdle.y, 0);
+            }
          }
          sprintf(score,"%d",(int) (universal_y / BOUNCER_H ) );
          al_draw_text(font,al_map_rgb(255,255,255), 0, 300, 0, score);
