@@ -187,15 +187,8 @@ int main(int argc, char **argv)
    bouncer = load_bitmap_at_size(CAR_IMAGE, BOUNCER_W, BOUNCER_H);
    road_bmp1 = load_bitmap_at_size(ROAD_IMAGE, SCREEN_W, SCREEN_H);
    road_bmp2 = load_bitmap_at_size(ROAD_IMAGE, SCREEN_W, SCREEN_H);
-   if(!bouncer) {
-      fprintf(stderr, "failed to create bouncer bitmap!\n");
-      al_destroy_display(display);
-      al_destroy_timer(timer);
-      return -1;
-   }
-
-   if(!bouncer) {
-      fprintf(stderr, "failed to create bouncer bitmap!\n");
+   if(!bouncer && !road_bmp1 && !road_bmp2) {
+      fprintf(stderr, "failed to create bitmaps!\n");
       al_destroy_display(display);
       al_destroy_timer(timer);
       return -1;
