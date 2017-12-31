@@ -8,6 +8,8 @@
 #include "allegro5/allegro_image.h"
  
 #define HURDLE_ARRAY_SIZE 5
+#define ROAD_IMAGE "images/road.png"
+#define CAR_IMAGE "images/car.png"
 
 const float FPS = 60;
 const int SCREEN_W = 1200;
@@ -182,9 +184,9 @@ int main(int argc, char **argv)
    }
    int road_y = 0;
  
-   bouncer = load_bitmap_at_size("images/car.png", BOUNCER_W, BOUNCER_H);
-   road_bmp1 = load_bitmap_at_size("images/road.png", SCREEN_W, SCREEN_H);
-   road_bmp2 = load_bitmap_at_size("images/road.png", SCREEN_W, SCREEN_H);
+   bouncer = load_bitmap_at_size(CAR_IMAGE, BOUNCER_W, BOUNCER_H);
+   road_bmp1 = load_bitmap_at_size(ROAD_IMAGE, SCREEN_W, SCREEN_H);
+   road_bmp2 = load_bitmap_at_size(ROAD_IMAGE, SCREEN_W, SCREEN_H);
    if(!bouncer) {
       fprintf(stderr, "failed to create bouncer bitmap!\n");
       al_destroy_display(display);
