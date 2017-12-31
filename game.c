@@ -78,14 +78,6 @@ bool check_collision(int x1,int y1, int w1, int h1, int x2, int y2, int w2 , int
 
 }
 
-bool check_for_hurdle_collisions(HURDLE *hurdle_ptr,int bouncer_x,int bouncer_y){
-   HURDLE a_hurdle = *hurdle_ptr;
-   printf("%d,%d\n", bouncer_x,bouncer_y);
-   if (bouncer_x < a_hurdle.x + BOUNCER_W * 3 && bouncer_x + BOUNCER_W > a_hurdle.w && bouncer_y + BOUNCER_H > a_hurdle.h && bouncer_y < a_hurdle.y + BOUNCER_H){
-      return true;
-   }
-   return false;
-}
 HURDLE hurdles[HURDLE_ARRAY_SIZE];
 
 HURDLE create_random_hurdle(int distance_since_last_hurdle){
