@@ -8,7 +8,8 @@
 #include <allegro5/allegro_image.h>
  
 #define HURDLE_ARRAY_SIZE 5
-#define ROAD_IMAGE "images/road.png"
+#define ROAD_IMAGE "images/road.jpg"
+// #define ROAD_IMAGE "images/road.png"
 #define CAR_IMAGE "images/car.png"
 
 const float FPS = 60;
