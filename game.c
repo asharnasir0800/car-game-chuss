@@ -8,17 +8,17 @@
 #include <allegro5/allegro_image.h>
 
 #define HURDLE_ARRAY_SIZE 5
-#define ROAD_IMAGE "road.jpg"
-#define CAR_IMAGE "car.png"
-#define HEART_IMAGE "heart2.png"
-#define TRAFFIC_IMAGE "traffic.jpg"
+#define ROAD_IMAGE "images/road.jpg"
+#define CAR_IMAGE "images/car.png"
+#define HEART_IMAGE "images/heart2.png"
+#define TRAFFIC_IMAGE "images/traffic.jpg"
 
 const float FPS = 60;
 const int SCREEN_W = 1200;
 const int SCREEN_H = 600;
 const int BOUNCER_W = 64;
 const int BOUNCER_H = 96;
-const int HURDLE_W = 128;
+const int HURDLE_W = 256;
 const int HURDLE_H = 48;
 const float WALL_EDGE_DISTANCE = 200;
 const float WALL_THICKNESS = 25;
@@ -81,11 +81,11 @@ ALLEGRO_BITMAP *load_bitmap_at_size(const char *filename, int w, int h)
 
    return resized_bmp;
 }
-HEART create_randomheart()
-{
-   heart.x=ra
+// HEART create_randomheart()
+// {
+//    heart.x=ra
 
-}
+// }
 
 bool check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2) {
    bool cond1 = x1 < x2 + w2;
@@ -98,10 +98,7 @@ bool check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int
    return cond;
 }
 
-
-
 HURDLE hurdles[HURDLE_ARRAY_SIZE];
-
 
 HURDLE create_random_hurdle(int index_of_empty_hurdle, int y_offset) {
    const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - HURDLE_W;
@@ -120,13 +117,13 @@ HURDLE create_random_hurdle(int index_of_empty_hurdle, int y_offset) {
    al_clear_to_color(al_map_rgb(255, 0, 0));
 
    //ALLEGRO_BITMAP *hurdle_bmp = load_bitmap_at_size(TRAFFIC_IMAGE, HURDLE_W, HURDLE_H);
-
    int new_offset = rand() % ROAD_WIDTH;
    // printf("%d\n", 0 - (BOUNCER_H + distance_since_last_hurdle)  );
    HURDLE a_hurdle = { hurdle_x + new_offset ,hurdle_y  , HURDLE_W, BOUNCER_H,hurdle_bmp };
    // last_y_pos = hurdle_y;
    // hurdles[i] = a_hurdle;
    // i = (i + 1) % HURDLE_ARRAY_SIZE;
+   // printf("Hurdle put at %f %f\n",hurdle_x + new_offset,hurdle_y );
    hurdles[index_of_empty_hurdle] = a_hurdle;
    last_hurdle = index_of_empty_hurdle;
    return a_hurdle;
@@ -154,11 +151,14 @@ int main(int argc, char **argv)
    char score[6];
    char heart_text[2];
    srand(time(NULL));
+   int last_hurdle_pos = 0;
    float universal_dy = 6.0;
-   float universal_d2y = 0.005;
+   float old_universal_dy = 6.0;
+   float universal_d2y = 0.01;
+   float universal_dy_limit = 8.0;
    float dcar = 8;//WTF  IS THIS
    float bouncer_x = SCREEN_W / 2.0 - BOUNCER_W / 2.0;
-   float bouncer_y = SCREEN_H / 2.0 - BOUNCER_H / 2.0;
+   float bouncer_y = SCREEN_H  - BOUNCER_H;
    float heart_x = 25.0;
    float heart_y = 50.0;
    int heart_count = 3;
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
 
 
    bouncer = load_bitmap_at_size(CAR_IMAGE, BOUNCER_W, BOUNCER_H);
-   heart_bmp = load_bitmap_at_size("heart.png",48, 48);
+   heart_bmp = load_bitmap_at_size(HEART_IMAGE,48, 48);
    /*heart_bmp = al_create_bitmap(48, 48);
    al_set_target_bitmap(heart_bmp);
    al_clear_to_color(al_map_rgb(255,255,255));
@@ -216,6 +216,7 @@ int main(int argc, char **argv)
 
    for (int i = 0; i < HURDLE_ARRAY_SIZE; i++) {
       create_random_hurdle(i, 10 * i  * HURDLE_H);
+      last_hurdle_pos = 10 * i * HURDLE_H;
    }
 
    al_set_target_bitmap(al_get_backbuffer(display));
@@ -247,8 +248,8 @@ int main(int argc, char **argv)
 
    al_start_timer(timer);
 
-   int last_hurdle_pos = 0;
    int noframes=0;
+   int point_at_which_limit_is_reached ;
    bool blinking = false;
    bool draw_car = true;
    bool printheart = false;
@@ -282,9 +283,6 @@ int main(int argc, char **argv)
             HURDLE a_hurdle = hurdles[i];
 
             if (check_collision(bouncer_x, bouncer_y, BOUNCER_W, BOUNCER_H, a_hurdle.x, a_hurdle.y, a_hurdle.w, a_hurdle.h)) {
-               // printf("%d-%d-%d-%d\n", cond1,cond2,cond3,cond4);
-               // printf("%d,%d\n", a_hurdle.x,a_hurdle.y);
-               
                if (!blinking)
                {
                   noframes = 0;
@@ -295,6 +293,7 @@ int main(int argc, char **argv)
                   {
                      //al_destroy_bitmap(heart_bmp);
                      doexit = true;
+                     printf("dy is %f , d2y is %f", universal_dy, universal_d2y);
                   }
                }
                
@@ -302,7 +301,7 @@ int main(int argc, char **argv)
 
             if (blinking)
             { 
-               if (noframes<121)
+               if (noframes<=120)
                {
                   if (noframes % 5 == 0)
                   {
@@ -319,8 +318,9 @@ int main(int argc, char **argv)
             // printf("%d\n",doexit );
             hurdles[i].y += universal_dy;
             if (hurdles[i].y > SCREEN_H && ((int)(universal_y - last_hurdle_pos)) > 10 * HURDLE_H) {
-               // if (hurdles[i].y > SCREEN_H ){
-               create_random_hurdle(i, (universal_y - last_hurdle_pos));
+            // if (hurdles[i].y > SCREEN_H ){
+               // create_random_hurdle(i, 10 * HURDLE_H + (universal_y - last_hurdle_pos));
+               create_random_hurdle(i, 0);
                last_hurdle_pos = universal_y;
                al_set_target_bitmap(al_get_backbuffer(display));
             }
@@ -332,7 +332,16 @@ int main(int argc, char **argv)
          }
          universal_y += universal_dy;
          road_y = ((int)(road_y + universal_dy)) % SCREEN_H;
-         universal_dy += universal_d2y;
+         if(universal_dy <= universal_dy_limit){
+            universal_dy += universal_d2y;
+         }
+         else {
+            point_at_which_limit_is_reached = universal_y;
+            if (universal_y > point_at_which_limit_is_reached + 500){
+               universal_dy_limit += 1;
+               printf("Limit changed!\n" );
+            }
+         }
          dcar += universal_d2y / 5;
          redraw = true;
          noframes++;
