@@ -286,7 +286,6 @@ int main()
          al_clear_to_color(al_map_rgb(0, 0, 0));
          al_draw_bitmap(road_bmp1, 0, road_y - SCREEN_H, 0);
          al_draw_bitmap(road_bmp2, 0, road_y, 0);
-         // draw_walls();
          if (draw_car)
          {
             al_draw_bitmap(car, car_x, car_y, 0);
@@ -383,9 +382,4 @@ HURDLE create_random_hurdle(int index_of_empty_hurdle, int y_offset) {
    HURDLE a_hurdle = { hurdle_x + new_offset ,hurdle_y  , HURDLE_W, CAR_H,hurdle_bmp };
    hurdles[index_of_empty_hurdle] = a_hurdle;
    return a_hurdle;
-}
-
-void draw_walls() {
-   al_draw_filled_rectangle(WALL_EDGE_DISTANCE, 0.0, WALL_EDGE_DISTANCE + WALL_THICKNESS, SCREEN_H, al_map_rgb(255, 255, 255));
-   al_draw_filled_rectangle(SCREEN_W - WALL_EDGE_DISTANCE, 0.0, SCREEN_W - (WALL_EDGE_DISTANCE + WALL_THICKNESS), SCREEN_H, al_map_rgb(255, 255, 255));
 }
