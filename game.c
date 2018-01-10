@@ -11,7 +11,6 @@
 #define ROAD_IMAGE "images/road.jpg"
 #define CAR_IMAGE "images/car.png"
 #define HEART_IMAGE "images/heart2.png"
-#define TRAFFIC_IMAGE "images/traffic.jpg"
 
 #define FPS  60.0
 #define SCREEN_W  1200
@@ -24,10 +23,11 @@
 #define WALL_THICKNESS  25.0
 #define HEART_W  32
 #define HEART_H  32
+#define HEART_COUNT 3
 
 float universal_y = 0;
 enum MYKEYS {
-   KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_ENTER,KEY_ESC
+   KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_ENTER
 };
 
 typedef struct {
@@ -38,78 +38,11 @@ typedef struct {
    ALLEGRO_BITMAP *bmp;
 } HURDLE;
 
-ALLEGRO_BITMAP *load_bitmap_at_size(const char *filename, int w, int h)
-{
-   ALLEGRO_BITMAP *resized_bmp, *loaded_bmp, *prev_target;
-
-   // 1. create a temporary bitmap of size we want
-   resized_bmp = al_create_bitmap(w, h);
-   if (!resized_bmp) return NULL;
-
-   // 2. load the bitmap at the original size
-   loaded_bmp = al_load_bitmap(filename);
-   if (!loaded_bmp)
-   {
-      al_destroy_bitmap(resized_bmp);
-      return NULL;
-   }
-
-   // 3. set the target bitmap to the resized bmp
-   prev_target = al_get_target_bitmap();
-   al_set_target_bitmap(resized_bmp);
-
-   // 4. copy the loaded bitmap to the resized bmp
-   al_draw_scaled_bitmap(loaded_bmp,
-      0, 0,                                // source origin
-      al_get_bitmap_width(loaded_bmp),     // source width
-      al_get_bitmap_height(loaded_bmp),    // source height
-      0, 0,                                // target origin
-      w, h,                                // target dimensions
-      0                                    // flags
-      );
-
-   // 5. restore the previous target and clean up
-   al_set_target_bitmap(prev_target);
-   // al_destroy_loaded_bmp(loaded_bmp);
-
-   return resized_bmp;
-}
-bool check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2) {
-   bool cond1 = x1 < x2 + w2;
-   bool cond2 = x1 + w1 > x2;
-   bool cond3 = y1 < y2 + h2;
-   bool cond4 = y1 + h1 > y2;
-
-   bool cond = cond1 && cond2 && cond3 && cond4;
-   
-   return cond;
-}
-
+ALLEGRO_BITMAP *load_bitmap_at_size(const char *filename, int w, int h);
+bool check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
 HURDLE hurdles[HURDLE_ARRAY_SIZE];
-
-HURDLE create_random_hurdle(int index_of_empty_hurdle, int y_offset) {
-   const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - HURDLE_W;
-   float hurdle_x = WALL_EDGE_DISTANCE + WALL_THICKNESS;
-   // float hurdle_y = 0 - CAR_H ;
-   float hurdle_y = 0 - CAR_H - y_offset;
-
-   int static last_hurdle = -1;
-
-   ALLEGRO_BITMAP *hurdle_bmp = al_create_bitmap(HURDLE_W, CAR_H);
-   al_set_target_bitmap(hurdle_bmp);
-   al_clear_to_color(al_map_rgb(255, 0, 0));
-
-   int new_offset = rand() % ROAD_WIDTH;
-   HURDLE a_hurdle = { hurdle_x + new_offset ,hurdle_y  , HURDLE_W, CAR_H,hurdle_bmp };
-   hurdles[index_of_empty_hurdle] = a_hurdle;
-   last_hurdle = index_of_empty_hurdle;
-   return a_hurdle;
-}
-
-void draw_walls() {
-   al_draw_filled_rectangle(WALL_EDGE_DISTANCE, 0.0, WALL_EDGE_DISTANCE + WALL_THICKNESS, SCREEN_H, al_map_rgb(255, 255, 255));
-   al_draw_filled_rectangle(SCREEN_W - WALL_EDGE_DISTANCE, 0.0, SCREEN_W - (WALL_EDGE_DISTANCE + WALL_THICKNESS), SCREEN_H, al_map_rgb(255, 255, 255));
-}
+HURDLE create_random_hurdle(int index_of_empty_hurdle, int y_offset);
+void draw_walls();
 
 int main()
 {
@@ -139,7 +72,7 @@ int main()
    float car_y = SCREEN_H  - CAR_H;
    float heart_x = 25.0;
    float heart_y = 50.0;
-   int heart_count = 3;
+   int heart_count = HEART_COUNT;
 
 
    bool key[4] = { false, false, false, false };
@@ -174,10 +107,6 @@ int main()
 
    car = load_bitmap_at_size(CAR_IMAGE, CAR_W, CAR_H);
    heart_bmp = load_bitmap_at_size(HEART_IMAGE,48, 48);
-   /*heart_bmp = al_create_bitmap(48, 48);
-   al_set_target_bitmap(heart_bmp);
-   al_clear_to_color(al_map_rgb(255,255,255));
-   al_set_target_bitmap(al_get_backbuffer(display))*/;
    road_bmp1 = load_bitmap_at_size(ROAD_IMAGE, SCREEN_W, SCREEN_H);
    road_bmp2 = load_bitmap_at_size(ROAD_IMAGE, SCREEN_W, SCREEN_H);
    if (!(car && road_bmp1 && road_bmp2 && heart_bmp)) {
@@ -186,11 +115,6 @@ int main()
       al_destroy_timer(timer);
       return -1;
    }
-
-
-   // al_set_target_bitmap(car);
-   // al_clear_to_color(al_map_rgb(255, 255, 0));
-
    for (int i = 0; i < HURDLE_ARRAY_SIZE; i++) {
       create_random_hurdle(i, 10 * i  * HURDLE_H);
       last_hurdle_pos = 10 * i * HURDLE_H;
@@ -224,11 +148,10 @@ int main()
 
    al_start_timer(timer);
 
-   int noframes=0;
+   int frames=0;
    int point_at_which_limit_is_reached ;
    bool blinking = false;
    bool draw_car = true;
-   bool refresh_limit = false;
    while (!doexit)
    { 
 
@@ -260,14 +183,14 @@ int main()
             if (check_collision(car_x, car_y, CAR_W, CAR_H, a_hurdle.x, a_hurdle.y, a_hurdle.w, a_hurdle.h)) {
                if (!blinking)
                {
-                  noframes = 0;
+                  frames = 0;
                   heart_count--;
                   blinking = true;
 
                   if (heart_count == 0)
                   {
                      doexit = true;
-                     printf("dy is %f , d2y is %f", universal_dy, universal_d2y);
+                     printf("dy is %f , d2y is %f \n", universal_dy, universal_d2y);
                   }
                }
                
@@ -275,11 +198,10 @@ int main()
 
             if (blinking)
             { 
-               if (noframes <= 120)
+               if (frames <= 120)
                {
-                  if (noframes % 5 == 0)
+                  if (frames % 5 == 0)
                   {
-                     //draw_car = true;
                      draw_car = !(draw_car);
                   }
                }
@@ -309,7 +231,7 @@ int main()
             }
          }
          redraw = true;
-         noframes++;
+         frames++;
       }
       else if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
          break;
@@ -364,7 +286,7 @@ int main()
          al_clear_to_color(al_map_rgb(0, 0, 0));
          al_draw_bitmap(road_bmp1, 0, road_y - SCREEN_H, 0);
          al_draw_bitmap(road_bmp2, 0, road_y, 0);
-         draw_walls();
+         // draw_walls();
          if (draw_car)
          {
             al_draw_bitmap(car, car_x, car_y, 0);
@@ -394,5 +316,76 @@ int main()
    al_destroy_display(display);
    al_destroy_event_queue(event_queue);
 
+   puts(score);
+
    return 0;
+}
+
+ALLEGRO_BITMAP *load_bitmap_at_size(const char *filename, int w, int h)
+{
+   ALLEGRO_BITMAP *resized_bmp, *loaded_bmp, *prev_target;
+
+   // 1. create a temporary bitmap of size we want
+   resized_bmp = al_create_bitmap(w, h);
+   if (!resized_bmp) return NULL;
+
+   // 2. load the bitmap at the original size
+   loaded_bmp = al_load_bitmap(filename);
+   if (!loaded_bmp)
+   {
+      al_destroy_bitmap(resized_bmp);
+      return NULL;
+   }
+
+   // 3. set the target bitmap to the resized bmp
+   prev_target = al_get_target_bitmap();
+   al_set_target_bitmap(resized_bmp);
+
+   // 4. copy the loaded bitmap to the resized bmp
+   al_draw_scaled_bitmap(loaded_bmp,
+      0, 0,                                // source origin
+      al_get_bitmap_width(loaded_bmp),     // source width
+      al_get_bitmap_height(loaded_bmp),    // source height
+      0, 0,                                // target origin
+      w, h,                                // target dimensions
+      0                                    // flags
+      );
+
+   // 5. restore the previous target and clean up
+   al_set_target_bitmap(prev_target);
+   // al_destroy_loaded_bmp(loaded_bmp);
+
+   return resized_bmp;
+}
+bool check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2) {
+   bool cond1 = x1 < x2 + w2;
+   bool cond2 = x1 + w1 > x2;
+   bool cond3 = y1 < y2 + h2;
+   bool cond4 = y1 + h1 > y2;
+
+   bool cond = cond1 && cond2 && cond3 && cond4;
+   
+   return cond;
+}
+
+HURDLE create_random_hurdle(int index_of_empty_hurdle, int y_offset) {
+   const int ROAD_WIDTH = SCREEN_W - 2 * (WALL_THICKNESS + WALL_EDGE_DISTANCE) - HURDLE_W;
+   float hurdle_x = WALL_EDGE_DISTANCE + WALL_THICKNESS;
+   // float hurdle_y = 0 - CAR_H ;
+   float hurdle_y = 0 - CAR_H - y_offset;
+
+
+   ALLEGRO_BITMAP *hurdle_bmp = al_create_bitmap(HURDLE_W, CAR_H);
+   al_set_target_bitmap(hurdle_bmp);
+   al_clear_to_color(al_map_rgb(255, 0, 0));
+
+   int new_offset = rand() % ROAD_WIDTH;
+   HURDLE a_hurdle = { hurdle_x + new_offset ,hurdle_y  , HURDLE_W, CAR_H,hurdle_bmp };
+   hurdles[index_of_empty_hurdle] = a_hurdle;
+   return a_hurdle;
+}
+
+void draw_walls() {
+   al_draw_filled_rectangle(WALL_EDGE_DISTANCE, 0.0, WALL_EDGE_DISTANCE + WALL_THICKNESS, SCREEN_H, al_map_rgb(255, 255, 255));
+   al_draw_filled_rectangle(SCREEN_W - WALL_EDGE_DISTANCE, 0.0, SCREEN_W - (WALL_EDGE_DISTANCE + WALL_THICKNESS), SCREEN_H, al_map_rgb(255, 255, 255));
 }
